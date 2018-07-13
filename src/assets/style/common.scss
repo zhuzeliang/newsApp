@@ -1,0 +1,72 @@
+// 字体的转换
+@mixin font-dpr ($font-size) {
+  font-size: $font-size;
+  [data-dpr="2"] & {
+    font-size: $font-size * 2;
+  }
+  [data-dpr="3"] & {
+    font-size: $font-size * 3;
+  }
+}
+
+// px转换为rem
+@function px2rem ($px, $base-font-size: 64px) {
+  @if unitless($px) {
+    @warn "Assuming #{$px} to be in pixels, attempting to convert it into pixels for you";
+    @return px2rem($px * 1px);
+  }
+  @else if unit($px)==rem {
+    @return $px;
+  }
+  @return ($px / $base-font-size) * 1rem;
+}
+
+
+/*清除浮动*/
+
+@mixin clearfix {
+  &:after {
+    display: block;
+    clear: both;
+
+    height: 0;
+
+    content: '\200B';
+  }
+}
+
+//弹性盒子
+@mixin flexbox() {
+  display: -webkit-box;
+}
+
+//弹性盒子分配
+@mixin flex($value) {
+  -webkit-box-flex: $value;
+}
+
+//弹性盒子垂直分配
+@mixin vertical() {
+  -webkit-box-orient: vertical;
+}
+
+//弹性盒子子元素水平方向布局
+@mixin horizontal-layout($value) {
+  -webkit-box-pack: $value;
+}
+
+//弹性盒子子元素垂直放行布局
+@mixin vertical-layout($value) {
+  -webkit-box-align: $value;
+}
+
+//超出省略
+@mixin clamp($value) {
+  display: -webkit-box;
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $value;
+}

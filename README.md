@@ -1,6 +1,6 @@
-# vue-app
+# vue-news-app
 
-> A Vue.js project
+> vue2.0 + mint ui + fetch-jsonp 仿新闻类app的项目，数据接口为今日头条的数据，实时刷新与下拉加载数据并非真实完美。
 
 ## Build Setup
 

@@ -4,7 +4,7 @@
       <div class="wrapper" id="wrapper" ref="wrapper" :style="{ height: wrapperHeight + 'px' }">
         <mt-loadmore :top-method="loadTop" :bottom-method="loadBottom" :auto-fill="false"  ref="loadmore">
           <div class="item-list">
-            <div class="item" v-for="(item,i) in newsDataList" :key="i">
+            <router-link :to="{name: 'detail', params: { id:item.item_id }}" class="item" v-for="(item,i) in newsDataList" :key="i" tag="div">
                 <div class="item-abstract">{{item.abstract}}</div>
                 <div class="item-img-list">
                   <div class="item-img" v-for="(img,index) in item.image_list">
@@ -16,7 +16,7 @@
                   <span class="cmt">评论：{{item.comment_count}}</span>
                   <span class="time">{{item.publish_time | timeFamatter}}前</span>
                 </div>
-            </div>
+            </router-link>
           </div>
         </mt-loadmore>
       </div>
@@ -25,12 +25,12 @@
 </template>
 <script>
 import CHomeNav from '@/components/HomeNav.vue'
-import jsonp from 'jsonp'
-import { Loadmore, Lazyload } from 'mint-ui'
+import { getMoreNews, getRefreshNews } from '@/api/getData'
+import { Loadmore, Lazyload, Toast } from 'mint-ui'
+import { mapState, mapMutations, mapGetters, mapActions } from "vuex"
 export default {
   data() {
     return {
-      loading:false,
       allLoaded:false,
       newsDataList:[],
       wrapperHeight:0
@@ -39,44 +39,78 @@ export default {
   components: {
     CHomeNav
   },
+  computed:{
+    ...mapState([
+      'newsList'
+    ])
+  },
   mounted(){
-    let type = this.$route.params.type
-    this.getMoreNews(type)
     this.wrapperHeight = document.documentElement.clientHeight - this.$refs.wrapper.getBoundingClientRect().top
+    let type = this.$route.params.type
+    if(this.newsList[type]){
+      for(let item of this.newsList[type].news){
+        this.newsDataList.push(item)
+      }
+      this.$nextTick(() => {
+        this.$refs.wrapper.scrollTop = this.newsList[type].scrollTop  //新闻列表容器滚动浏览位置
+      })
+    }else{
+      this.loadTop()
+    }
   },
   methods: {
-    getMoreNews(type){
-      var _this = this
-      jsonp(`https://m.toutiao.com/list/?tag=${type}&ac=wap&count=20&format=json_raw&as=A1053B5487C0B10&cp=5B47000B21100E1&max_behot_time=${parseInt(new Date().getTime() / 1000)}`, { timeout: 3000 }, function(err, res) {
-        _this.newsDataList = res.data
-      })  
+    ...mapMutations(['saveNewsList']),
+    async loadTop() {
+      let res = await getMoreNews(this.$route.params.type)
+      let resJson = await res.json()
+      for(let item of resJson.data){
+        this.newsDataList.unshift(item)
+      }
+      Toast({
+        message: `已经为您更新${resJson.return_count}条信息`,
+        position: 'top',
+        duration: 1000
+      });
+      this.$refs.loadmore.onTopLoaded()    
     },
-    loadTop() {
-      let _this = this
-      jsonp(`https://m.toutiao.com/list/?tag=${this.$route.params.type}&ac=wap&count=20&format=json_raw&as=A1053B5487C0B10&cp=5B47000B21100E1&min_behot_time=${parseInt(new Date().getTime() / 1000)}`, { timeout: 3000 }, function(err, res) {
-        res.data.forEach((item,i) => {
-          _this.newsDataList.unshift(item)
-        })
-        _this.$refs.loadmore.onTopLoaded()
-      })  
-    },
-    loadBottom() {
-      let _this = this
-      jsonp(`https://m.toutiao.com/list/?tag=${this.$route.params.type}&ac=wap&count=20&format=json_raw&as=A1053B5487C0B10&cp=5B47000B21100E1&max_behot_time=${parseInt(new Date().getTime() / 1000)}`, { timeout: 3000 }, (err, res)=>{
-        res.data.forEach((item,i) => {
-          _this.newsDataList.push(item)
-        })
-        _this.$refs.loadmore.onBottomLoaded()
-      })  
+    async loadBottom() {
+      let res = await getRefreshNews(this.$route.params.type)
+      let resJson = await res.json()
+      for(let item of resJson.data){
+        this.newsDataList.push(item)
+      }   
+      this.$refs.loadmore.onBottomLoaded()
     }
   },
   watch: {
     $route (to, from) {
+      //已经浏览过的type 从store里取数据
+      let fromType = from.params.type
+      let scrollTop = this.$refs.wrapper.scrollTop
+      this.saveNewsList({type:fromType,data:{news:this.newsDataList,scrollTop:scrollTop}})
       if (to.path.includes('home')) {
-        const type = to.params.type
-        this.getMoreNews(type)
+        let toType = to.params.type
+        console.log(scrollTop)
+        this.newsDataList = []          //动态路由切换生命周期不走，需先清空newsDataList
+        if(this.newsList[toType]){
+          for(let item of this.newsList[toType].news){
+            this.newsDataList.push(item)
+          }
+          this.$nextTick(() => {
+            this.$refs.wrapper.scrollTop = this.newsList[type].scrollTop  //新闻列表容器滚动浏览位置
+          })
+        }else{
+          this.loadTop()
+        }
       }
     },
+  },
+  beforeRouteLeave (to, from, next) {
+    //离开进入详情 存储数据 和 滚动条位置
+    let type = from.params.type
+    let scrollTop = this.$refs.wrapper.scrollTop
+    this.saveNewsList({type:type,data:{news:this.newsDataList,scrollTop:scrollTop}})
+    next()
   },
   filters:{
     timeFamatter(val){
@@ -121,6 +155,7 @@ export default {
     .item-abstract{
       @include clamp(3);
       @include font-dpr(15px);
+      text-align: justify;
       color:#333333;
       margin-bottom:px2rem(10px);
     }

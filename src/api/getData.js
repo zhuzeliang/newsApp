@@ -1,4 +1,18 @@
-import axios from 'axios'
-import jsonp from 'jsonp'
+import fetchJsonp from 'fetch-jsonp'
 
-export const getList = () => jsonp.get('http://api.map.baidu.com/place/v2/search?query=%E7%BE%8E%E5%A5%B3&tag=%E5%9B%BE%E7%89%87&region=%E4%B8%8A%E6%B5%B7&output=json&ak=V7GTuUvWI1oBA5IMFTUXvg4d2pXZducm')
+//获取更多新闻
+export const getMoreNews = (type) => {
+	return fetchJsonp(`https://m.toutiao.com/list/?tag=${type}&ac=wap&count=20&format=json_raw&as=A1453BF4CC702D4&cp=5B4C00920D546E1&max_behot_time=${parseInt(new Date().getTime() / 1000)}`)
+}
+
+//刷新最新新闻
+export const getRefreshNews = (type) => {
+	return fetchJsonp(`https://m.toutiao.com/list/?tag=${type}&ac=wap&count=20&format=json_raw&as=A1453BF4CC702D4&cp=5B4C00920D546E1&min_behot_time=${parseInt(new Date().getTime() / 1000)}`)
+}
+
+
+
+//新闻详情
+export const getDetailNews = (id) => {
+	return fetchJsonp(`https://m.toutiao.com/i${id}/info/`)
+}

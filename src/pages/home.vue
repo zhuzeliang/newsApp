@@ -97,7 +97,7 @@ export default {
             this.newsDataList.push(item)
           }
           this.$nextTick(() => {
-            this.$refs.wrapper.scrollTop = this.newsList[type].scrollTop  //新闻列表容器滚动浏览位置
+            this.$refs.wrapper.scrollTop = this.newsList[toType].scrollTop  //新闻列表容器滚动浏览位置
           })
         }else{
           this.loadTop()

@@ -29,10 +29,13 @@ export default {
 				{url: '/home', type: 'news_world', text: '国际'},
 				{url: '/home', type: 'news_fashion', text: '时尚'}
 	      	],
+	      	navArrs:[]
 	    }
 	},
 	mounted(){
-		
+		this.nav.forEach((item,i) => {
+    		this.navArrs.push(item.type)
+    	})
 	},
 	methods:{
 		scrollTo(e){
@@ -48,7 +51,17 @@ export default {
 	},
 	watch: {
 	    $route (to, from) {
-	    	
+	    	let type = to.params.type
+	    	let homeNavs = this.$refs.homeNavs
+	    	let navs = document.querySelectorAll(".nav")
+	    	let index = this.navArrs.indexOf(type)
+	    	let dom = navs[index]
+	    	let windowWidthHalf = document.documentElement.clientWidth/2
+        	let scrollLeft = homeNavs.scrollLeft
+        	let domWidthHalf = dom.clientWidth/2
+        	let domLeft = dom.getBoundingClientRect().left
+        	let distance = domLeft + scrollLeft - windowWidthHalf + domWidthHalf
+        	homeNavs.scrollLeft = distance
 	    }
 	}
 }

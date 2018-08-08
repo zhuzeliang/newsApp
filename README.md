@@ -4,7 +4,7 @@
 
 源码地址：[https://github.com/zhuzeliang/newsApp](https://github.com/zhuzeliang/newsApp)
 
-预览地址：[https://zhuzeliang.github.io](https://zhuzeliang.github.io)
+预览地址：[https://zhuzeliang.github.io](https://zhuzeliang.github.io/newsApp)
 
 ## 技术栈
 
